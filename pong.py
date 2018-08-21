@@ -31,7 +31,7 @@ def reflect_vec2( axis, vec ):
     return vec2_diff( vec, scaledN )
 
 
-def randomize_vec( magnitude ):
+def randomize_vec( magnitude, clamp=[1,1] ):
     x_sign = random.randint(0,1)
     if x_sign == 1:
         x_sign = -1
@@ -42,12 +42,16 @@ def randomize_vec( magnitude ):
         y_sign = -1
     else:
         y_sign = 1
-    return vec2_multScalar(normalize_vec2([ random.random()*x_sign, random.random()*y_sign ]), magnitude)
+    return vec2_multScalar(normalize_vec2([ random.random()*x_sign*clamp[0], random.random()*y_sign*clamp[1] ]), magnitude)
 
 def box_test( boxA, boxB ):
     ax, ay, aw, ah = boxA
     bx, by, bw, bh = boxB
-    return (abs(ax - bx) * 2 < (aw + bw)) and (abs(ay - by) * 2 < (ah + bh))
+    cax = (ax+ax+aw)/2
+    cay = (ay+ay+ah)/2
+    cbx = (bx+bx+bw)/2
+    cby = (by+by+bh)/2 
+    return (abs(cax - cbx) * 2 <= (aw + bw)) and (abs(cay - cby) * 2 <= (ah + bh))
 
 pygame.init()
 pygame.display.set_caption('PGM - PyPong')
@@ -59,21 +63,21 @@ screen = pygame.display.set_mode( size )
 black = 0, 0, 0
 white = 255, 255, 255
 
-p1 = [5, 70]
-p2 = [305, 70]
 PLAYER_HEIGHT = 50
 PLAYER_WIDTH = 10
 PLAYER_SPEED = 5
+p1 = [5, height*0.5-PLAYER_HEIGHT*0.5]
+p2 = [305, height*0.5-PLAYER_HEIGHT*0.5]
 
 p1_score = 0
 p2_score = 0
 
 ball = [160,120]
 BALL_SIZE = 10
-BALL_ACCEL = 0.05
+BALL_ACCEL = 0.25
 BALL_INIT_SPEED = 2
 ball_speed = BALL_INIT_SPEED
-ball_velocity = randomize_vec( ball_speed )
+ball_velocity = randomize_vec( 1, [1,0.5] )
 
 def player_as_rect( player ):
     x, y = player
@@ -177,7 +181,7 @@ while 1:
     p1 = update_player( p1, dir1, PLAYER_SPEED ) 
     p2 = update_player( p2, dir2, PLAYER_SPEED )   
 
-    collision = check_collisions( ball, p1, p2 ) 
+    collision = check_collisions( ball, p1, p2 )
     if collision:
         ball_velocity = ball_update_trajectory( ball_velocity, collision )
         ball_speed = ball_speed + BALL_ACCEL
